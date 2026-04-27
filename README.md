@@ -2,17 +2,40 @@
 
 An AI-powered system to analyze resumes and track job applications.
 
-## 🚧 Status
-Day 1 - Backend setup completed
+---
 
-## 🧠 Features (MVP)
-- Resume upload (PDF)
-- Resume analysis (coming soon)
-- Job application tracker (coming soon)
+## 🚧 Status
+Day 2 - Resume upload and text extraction completed
+
+---
+
+## 🚀 Features Implemented
+
+- 📄 Upload resume (PDF)
+- 🧠 Extract text from resume using PyPDF2
+- ⚙️ Backend API for handling file uploads
+
+---
+
+## 🧠 Features (In Progress)
+
+- Resume vs Job Description analysis
+- Match score & missing keyword detection
+- Job application tracker dashboard
+
+---
 
 ## 🛠️ Tech Stack
+
 - Python (Flask)
 - PyPDF2
+- REST APIs
+
+---
 
 ## 📌 Goal
-Build a real-world AI tool to help students improve job applications.
+
+To build a real-world AI tool that helps students:
+- Optimize resumes
+- Track job applications
+- Improve chances of getting shortlisted
