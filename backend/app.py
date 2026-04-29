@@ -15,12 +15,23 @@ def clean_text(text):
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', '', text)  # remove symbols
     return text.split()
-
+def extract_keywords(words):
+    return {
+        word for word in words
+        if len(word) > 2 and word not in STOPWORDS
+    }
 #  Skill set (expand later)
 SKILLS = {
     "java", "python", "sql", "javascript", "react", "node", "spring",
     "boot", "flask", "django", "mongodb", "mysql", "aws", "docker",
     "kubernetes", "html", "css", "rest", "api"
+}
+
+STOPWORDS = {
+    "the", "and", "for", "with", "a", "an", "to", "of", "in",
+    "on", "at", "by", "is", "are", "looking", "developer",
+    "experience", "knowledge", "skills", "work",
+    "backend", "frontend", "engineer"
 }
 
 #  Home route
@@ -69,16 +80,24 @@ def analyze():
     resume_skills = resume_words.intersection(SKILLS)
     jd_skills = jd_words.intersection(SKILLS)
 
-    matched = resume_skills.intersection(jd_skills)
-    missing = jd_skills - resume_skills
+# 🔥 Dynamic keywords (flexible)
+    resume_keywords = extract_keywords(resume_words)
+    jd_keywords = extract_keywords(jd_words)
 
-    match_score = (len(matched) / len(jd_skills)) * 100 if jd_skills else 0
+# 🔥 Hybrid merge
+    resume_final = resume_skills.union(resume_keywords)
+    jd_final = jd_skills.union(jd_keywords)
+
+    matched = resume_final.intersection(jd_final)
+    missing = jd_final - resume_final
+
+    match_score = (len(matched) / len(jd_final)) * 100 if jd_final else 0
 
     return jsonify({
-        "match_score": round(match_score, 2),
-        "matched_skills": list(matched),
-        "missing_skills": list(missing)
-    })
+    "match_score": round(match_score, 2),
+    "matched_keywords": list(matched),
+    "missing_keywords": list(missing)
+})
 
 #  Run server
 if __name__ == "__main__":
