@@ -14,6 +14,8 @@ Day 2 - Resume upload and text extraction completed
 - 📄 Upload resume (PDF)
 - 🧠 Extract text from resume using PyPDF2
 - ⚙️ Backend API for handling file uploads
+- Hybrid keyword extraction (skills + dynamic filtering)
+- Improved accuracy using stopword removal
 
 ---
 
@@ -22,6 +24,7 @@ Day 2 - Resume upload and text extraction completed
 - Resume vs Job Description analysis
 - Match score & missing keyword detection
 - Job application tracker dashboard
+
 
 ---
 
