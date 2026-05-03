@@ -28,7 +28,7 @@ def extract_skills_section(text):
     capture = False
 
     for line in lines:
-        if "skill" in line:
+        if any(keyword in line for keyword in ["skill", "technology", "tools"]):
             capture = True
             continue
 
@@ -41,6 +41,7 @@ def extract_skills_section(text):
 
     return " ".join(skills_section)
 def extract_phrases(text):
+    text = text.lower()
     phrases = set()
 
     if "rest api" in text:
@@ -49,6 +50,18 @@ def extract_phrases(text):
         phrases.add("spring boot")
 
     return phrases
+def normalize_keywords(keywords):
+    normalized = set(keywords)
+
+    if "rest api" in normalized:
+        normalized.discard("rest")
+        normalized.discard("apis")
+
+    if "spring boot" in normalized:
+        normalized.discard("spring")
+        normalized.discard("boot")
+
+    return normalized
 #  Skill set (expand later)
 SKILLS = {
     "java", "python", "sql", "javascript", "react", "node", "spring",
@@ -98,8 +111,12 @@ def analyze():
     if not data:
         return jsonify({"error": "Invalid JSON"}), 400
 
-    resume_text = extract_skills_section(data.get("resume", ""))
+    raw_resume = data.get("resume", "")
+    skills_section = extract_skills_section(raw_resume)
     jd_text = data.get("jd", "")
+
+# fallback if section not found
+    resume_text = skills_section if skills_section.strip() else raw_resume
 
 # Step 1: base words
     resume_words = set(clean_text(resume_text))
@@ -121,8 +138,8 @@ def analyze():
     resume_phrases = extract_phrases(resume_text)
     jd_phrases = extract_phrases(jd_text)
 
-    resume_final = resume_final.union(resume_phrases)
-    jd_final = jd_final.union(jd_phrases)
+    resume_final = normalize_keywords(resume_final)
+    jd_final = normalize_keywords(jd_final)
 
 # Step 6: matching
     matched = resume_final.intersection(jd_final)
@@ -132,8 +149,8 @@ def analyze():
     
     return jsonify({
     "match_score": round(match_score, 2),
-    "matched_keywords": list(matched),
-    "missing_keywords": list(missing)
+    "matched_keywords": sorted(list(matched)),
+    "missing_keywords": sorted(list(missing))
 })
 
 #  Run server
