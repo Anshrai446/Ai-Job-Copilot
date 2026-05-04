@@ -62,6 +62,27 @@ def normalize_keywords(keywords):
         normalized.discard("boot")
 
     return normalized
+
+def calculate_weighted_score(matched, jd_final):
+  matched_score = sum(WEIGHTS.get(skill, 1) for skill in matched)
+  total_score = sum(WEIGHTS.get(skill, 1) for skill in jd_final)
+
+  return (matched_score / total_score) * 100 if total_score else 0
+WEIGHTS = {
+    "java": 3,
+    "spring boot": 4,
+    "sql": 3,
+    "mysql": 3,
+
+    "aws": 2,
+    "docker": 2,
+    "kubernetes": 2,
+    "rest api": 2,   
+
+    "html": 1,
+    "css": 1,
+    "javascript": 1
+}
 #  Skill set (expand later)
 SKILLS = {
     "java", "python", "sql", "javascript", "react", "node", "spring",
@@ -138,6 +159,9 @@ def analyze():
     resume_phrases = extract_phrases(resume_text)
     jd_phrases = extract_phrases(jd_text)
 
+    resume_final = resume_final.union(resume_phrases)
+    jd_final = jd_final.union(jd_phrases)
+    
     resume_final = normalize_keywords(resume_final)
     jd_final = normalize_keywords(jd_final)
 
@@ -145,8 +169,9 @@ def analyze():
     matched = resume_final.intersection(jd_final)
     missing = jd_final - resume_final
 
-    match_score = (len(matched) / len(jd_final)) * 100 if jd_final else 0
-    
+
+    match_score = calculate_weighted_score(matched, jd_final)
+
     return jsonify({
     "match_score": round(match_score, 2),
     "matched_keywords": sorted(list(matched)),
