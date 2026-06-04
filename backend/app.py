@@ -3,6 +3,7 @@ from utils.parser import extract_text_from_pdf
 from werkzeug.utils import secure_filename
 import os
 import re
+import sqlite3
 
 app = Flask(__name__)
 
@@ -68,6 +69,21 @@ def calculate_weighted_score(matched, jd_final):
   total_score = sum(WEIGHTS.get(skill, 1) for skill in jd_final)
 
   return (matched_score / total_score) * 100 if total_score else 0
+def init_db():
+    conn = sqlite3.connect("jobs.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS jobs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        company TEXT NOT NULL,
+        role TEXT NOT NULL,
+        status TEXT NOT NULL
+    )
+    """)
+
+    conn.commit()
+    conn.close()
 WEIGHTS = {
     "java": 3,
     "spring boot": 4,
@@ -177,7 +193,86 @@ def analyze():
     "matched_keywords": sorted(list(matched)),
     "missing_keywords": sorted(list(missing))
 })
+@app.route("/add-job", methods=["POST"])
+def add_job():
+    data = request.json
 
+    company = data.get("company")
+    role = data.get("role")
+    status = data.get("status", "Applied")
+
+    conn = sqlite3.connect("jobs.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "INSERT INTO jobs (company, role, status) VALUES (?, ?, ?)",
+        (company, role, status)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Job added successfully"
+    })
+@app.route("/jobs", methods=["GET"])
+def get_jobs():
+    conn = sqlite3.connect("jobs.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM jobs")
+    rows = cursor.fetchall()
+
+    conn.close()
+
+    jobs = []
+
+    for row in rows:
+        jobs.append({
+            "id": row[0],
+            "company": row[1],
+            "role": row[2],
+            "status": row[3]
+        })
+
+    return jsonify(jobs)
+@app.route("/update-job/<int:id>", methods=["PUT"])
+def update_job(id):
+    data = request.json
+
+    status = data.get("status")
+
+    conn = sqlite3.connect("jobs.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE jobs SET status = ? WHERE id = ?",
+        (status, id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Job updated successfully"
+    })
+@app.route("/delete-job/<int:id>", methods=["DELETE"])
+def delete_job(id):
+    conn = sqlite3.connect("jobs.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "DELETE FROM jobs WHERE id = ?",
+        (id,)
+    )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({
+        "message": "Job deleted successfully"
+    })
 #  Run server
 if __name__ == "__main__":
+    init_db()
     app.run(debug=True)
